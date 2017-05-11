@@ -19,33 +19,35 @@ public struct IntVector2
 		return new Vector2 (x, y);
 	}
 
-	public static IntVector2 operator *(IntVector2 c1, IntVector2 c2) 
-	{
+	public static bool operator ==(IntVector2 c1, IntVector2 c2) {
+		return (c1.x == c2.x && c1.y == c2.y);
+	}
+
+	public static bool operator !=(IntVector2 c1, IntVector2 c2) {
+		return (c1.x != c2.x || c1.y != c2.y);
+	}
+
+	public static IntVector2 operator *(IntVector2 c1, IntVector2 c2) {
 		return new IntVector2(c1.x * c2.x, c1.x * c2.y);
 	}
 
-	public static Vector2 operator *(Vector2 c1, IntVector2 c2) 
-	{
+	public static Vector2 operator *(Vector2 c1, IntVector2 c2) {
 		return new Vector2(c1.x * c2.x, c1.y * c2.y);
 	}
 
-	public static IntVector2 operator -(IntVector2 c1, IntVector2 c2) 
-	{
+	public static IntVector2 operator -(IntVector2 c1, IntVector2 c2) {
 		return new IntVector2(c1.x - c2.x, c1.y - c2.y);
 	}
 
-	public static IntVector2 operator +(IntVector2 c1, IntVector2 c2) 
-	{
+	public static IntVector2 operator +(IntVector2 c1, IntVector2 c2) {
 		return new IntVector2(c1.x + c2.x, c1.x + c2.y);
 	}
 
-	public static Vector2 operator +(Vector2 c1, IntVector2 c2) 
-	{
+	public static Vector2 operator +(Vector2 c1, IntVector2 c2) {
 		return new Vector2(c1.x + c2.x, c1.x + c2.y);
 	}
 
-	public static Vector2 operator /(IntVector2 c1, float c2) 
-	{
+	public static Vector2 operator /(IntVector2 c1, float c2)  {
 		return new Vector2 (c1.x * 1.0f / c2, c1.x * 1.0f / c2);
 	}
 }
@@ -70,12 +72,7 @@ public class GameLogic : MonoBehaviour {
 	public Texture2D texDashed;
 
 	private IntVector2 blockPixelSize;
-	//private float blockWidth = 60.0f;
-	//private float blockHeight = 60.0f;
-
 	private IntVector2 screenSize;
-
-	//public EventSystem eventSystem;
 
 	private Vector3 mousePosition = new Vector3 (0, 0, 0);
 	private Vector3 mousePositionPrevious = new Vector3 (0, 0, 0);
@@ -89,7 +86,6 @@ public class GameLogic : MonoBehaviour {
 
 	private int activeLine = -1;
 
-	//public Material mat;
 	private Vector3 mousePos;
 
 	public float percentFree = 0.1f;
@@ -127,7 +123,6 @@ public class GameLogic : MonoBehaviour {
 			if (tempLine != null) {
 				linesList.Add (tempLine);
 			}
-			//Debug.Log( "usedSpaces: " + usedSpaces + "     " + (gameArraySize.x * gameArraySize.y * (1.0f - percentFree)));
 		} while (usedSpaces < gameArraySize.x * gameArraySize.y * (1.0f - percentFree));
 
 		fillInBlanks ();
@@ -138,16 +133,13 @@ public class GameLogic : MonoBehaviour {
 		{
 			for (int x = 0; x < gameArraySize.x; ++x)
 			{
-				//addSquare (new IntVector2(x, y), !usedArray[x, y]);
 				addSquare (new IntVector2(x, y), blockArray[x, y]);
 			}
 		}
 
 		foreach (LineClass thisLine in linesList) {
-			thisLine.resetLine ();
+			//thisLine.resetLine ();
 		}
-
-		//linesList.Add (new LineClass (this.transform, new IntVector2 (8, 5), gameArraySize, texCircle, texDashed, blockPixelSize, screenSize));
 	}
 
 	private void resetUsedArray() {
@@ -191,10 +183,6 @@ public class GameLogic : MonoBehaviour {
 			}
 		} while (!isFreeSpace);
 
-		//if (isFreeSpace == false) {
-		//	return null;
-		//} else {
-
 		LineClass tempLine = new LineClass (this.transform, linePosition, gameArraySize, texCircle,
 			texDashed, blockPixelSize, screenSize);
 
@@ -231,16 +219,6 @@ public class GameLogic : MonoBehaviour {
 	private void fillInBlanks() {
 		for (int y = 0; y < gameArraySize.y; ++y) {
 			for (int x = 0; x < gameArraySize.x; ++x) {
-
-
-				/*
-				bool isFree = true;
-				foreach (LineClass thisLine in linesList) {
-					if (thisLine.hitsLine (new IntVector2 (x, y))) {
-						isFree = false;
-					}
-				}*/
-
 				if (usedArray [x, y]) {
 					blockArray [x, y] = false;
 				} else {
@@ -293,21 +271,6 @@ public class GameLogic : MonoBehaviour {
 				}
 			}
 		}
-
-
-		//IntVector2 reversePoint = _lineIn.getReverse (_testPoint);
-
-		/*for (int i = 0; i < linesList.Count; ++i) {
-			if (i != activeLine) {
-				if (linesList [i].hitsLine (_testPoint)) {
-					return false;
-				}
-				if (linesList [i].hitsLine (testPointReverse)) {
-					return false;
-				}
-			}
-		}*/
-
 		return true;
 	}
 
@@ -332,8 +295,6 @@ public class GameLogic : MonoBehaviour {
 		blockArrayGO [_testPoint.x, _testPoint.y] = new GameObject ("block_" + _testPoint.x + "," + _testPoint.y);
 		blockArrayGO [_testPoint.x, _testPoint.y].transform.SetParent (blockArrayHolder.transform);
 		SpriteRenderer sr = blockArrayGO [_testPoint.x, _testPoint.y].AddComponent<SpriteRenderer> () as SpriteRenderer;
-
-		//Sprite mySprite = Sprite.Create ((isBlock ? texBlock : texClear), new Rect (0.0f, 0.0f, texBlock.width, texBlock.height), new Vector2 (0.0f, 0.0f), 1.0f);
 
 		sr.sprite = Sprite.Create ((isBlock ? texBlock : texClear), new Rect (0.0f, 0.0f, texBlock.width, texBlock.height), new Vector2 (0.0f, 0.0f), 1.0f);
 
@@ -379,33 +340,17 @@ public class GameLogic : MonoBehaviour {
 		} else if (Input.GetKeyUp (KeyCode.Mouse0)) {
 			doUp (mousePosition);
 		}
-
-
-		/*for (int x = 0; x < gameArraySize.x; ++x) {
-			for (int y = 0; y < gameArraySize.y; ++y) {
-				SpriteRenderer sr = blockArrayGO [x, y].GetComponent<SpriteRenderer> ();
-
-				sr.color = new Color (0.0f,
-				//sr.color = new Color (usedArray[x, y] ? 1.0f : 0.0f,
-					1.0f,
-					1.0f);
-			}
-		}*/
-		//Debug.Log ("usedSpaces: " + usedSpaces);
 	}
 
 	private void doMoved (Vector3 _movedPos) {
 		//Debug.Log ("doMoved");
 
 		if (isMousePressed && activeLine >= 0) {
-
-			//Debug.Log ("mouse is pressed and active line is " + activeLine);
-
 			if (linesList.Count >= activeLine + 1) {
 				IntVector2 clickedBlock = getBlockFromPoint (new Vector2 (mousePosition.x, mousePosition.y));
 
 				bool isBlockAValidMove = isValidMove (clickedBlock, linesList [activeLine], false);
-
+				Debug.Log (isBlockAValidMove);
 				if (isBlockAValidMove) {
 
 					//SpriteRenderer sr = blockArrayGO [clickedBlock.x, clickedBlock.y].GetComponent<SpriteRenderer> ();
@@ -435,19 +380,15 @@ public class GameLogic : MonoBehaviour {
 
 		IntVector2 clickedBlock = getBlockFromPoint (new Vector2 (mousePosition.x, mousePosition.y));
 
-		//Debug.Log ("clicked on: " + clickedBlock.x + ", " + clickedBlock.y);
-
 		if (!isOutsideGameGrid (clickedBlock)) {
 			activeLine = -1;
-
-			//Debug.Log ("click is inside game grid");
+			Debug.Log ("inside game grid: " + linesList.Count);
 
 			for (int i = 0; i < linesList.Count; ++i) {
+				Debug.Log ("checking line: " + i);
 				if (linesList [i].pointActivatesLine (clickedBlock)) {
+					Debug.Log ("activates line: " + i);
 					activeLine = i;
-
-					//Debug.Log ("clicked on line: " + i);
-
 					break;
 				}
 			}
@@ -458,6 +399,5 @@ public class GameLogic : MonoBehaviour {
 		isMousePressed = false;
 		activeLine = -1;
 	}
-
 
 }
