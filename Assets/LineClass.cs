@@ -161,7 +161,7 @@ public class LineClass /*: MonoBehaviour */{
 		return true;
 	}
 
-	/*private bool isPointNextToLastPoint (IntVector2 _testPoint) {
+	private bool isPointNextToLastPoint (IntVector2 _newPoint) {
 		IntVector2 lastPoint = linePathList [linePathList.Count - 1];
 
 		bool isTestPointNextToEnd = false;
@@ -178,10 +178,10 @@ public class LineClass /*: MonoBehaviour */{
 		}
 
 		return isTestPointNextToEnd;
-	}*/
+	}
 
 	public bool doMove (IntVector2 _newPoint) {
-		IntVector2 lastPoint = linePathList [linePathList.Count - 1];
+		/*IntVector2 lastPoint = linePathList [linePathList.Count - 1];
 
 		bool isTestPointNextToEnd = false;
 		if (lastPoint.x == _newPoint.x) {
@@ -194,9 +194,9 @@ public class LineClass /*: MonoBehaviour */{
 				lastPoint.x == _newPoint.x - 1) {
 				isTestPointNextToEnd = true;
 			}
-		}
+		}*/
 
-		//bool isTestPointNextToEnd = isPointNextToLastPoint (_newPoint);
+		bool isTestPointNextToEnd = isPointNextToLastPoint (_newPoint);
 		if (isTestPointNextToEnd) {
 			bool doneMove = false;
 
@@ -396,13 +396,13 @@ public class LineClass /*: MonoBehaviour */{
 		lineRendererReverse.transform.SetParent (lineGO.transform);
 		lineRendererReverse.startWidth = blockPixelSize.x * 0.3f;
 		lineRendererReverse.endWidth = blockPixelSize.x * 0.3f;
-		//lineRendererReverse.startColor = Color.blue;
-		//lineRendererReverse.endColor = Color.blue;
+		lineRendererReverse.startColor = Color.blue;
+		lineRendererReverse.endColor = Color.blue;
 		lineRendererReverse.material = new Material (Shader.Find ("Particles/Alpha Blended"));
 		lineRendererReverse.useWorldSpace = true;  
-		lineRendererReverse.material.mainTexture = texDashed;
-		lineRendererReverse.material.mainTextureScale = new Vector2 (0.01f, 0.01f);
-		lineRendererReverse.textureMode = LineTextureMode.Tile;
+		//lineRendererReverse.material.mainTexture = texDashed;
+		//lineRendererReverse.material.mainTextureScale = new Vector2 (0.01f, 0.01f);
+		//lineRendererReverse.textureMode = LineTextureMode.Tile;
 		lineRendererReverse.positionCount = 1;
 		lineRendererReverse.SetPosition (0, new Vector3 (lineCenter.x, lineCenter.y, -1.0f));
 

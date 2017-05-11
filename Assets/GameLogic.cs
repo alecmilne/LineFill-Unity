@@ -130,7 +130,7 @@ public class GameLogic : MonoBehaviour {
 			//Debug.Log( "usedSpaces: " + usedSpaces + "     " + (gameArraySize.x * gameArraySize.y * (1.0f - percentFree)));
 		} while (usedSpaces < gameArraySize.x * gameArraySize.y * (1.0f - percentFree));
 
-		//fillInBlanks ();
+		fillInBlanks ();
 
 		resetUsedArray ();
 
@@ -144,7 +144,7 @@ public class GameLogic : MonoBehaviour {
 		}
 
 		foreach (LineClass thisLine in linesList) {
-			//thisLine.resetLine ();
+			thisLine.resetLine ();
 		}
 
 		//linesList.Add (new LineClass (this.transform, new IntVector2 (8, 5), gameArraySize, texCircle, texDashed, blockPixelSize, screenSize));
@@ -381,7 +381,7 @@ public class GameLogic : MonoBehaviour {
 		}
 
 
-		for (int x = 0; x < gameArraySize.x; ++x) {
+		/*for (int x = 0; x < gameArraySize.x; ++x) {
 			for (int y = 0; y < gameArraySize.y; ++y) {
 				SpriteRenderer sr = blockArrayGO [x, y].GetComponent<SpriteRenderer> ();
 
@@ -390,7 +390,7 @@ public class GameLogic : MonoBehaviour {
 					1.0f,
 					1.0f);
 			}
-		}
+		}*/
 		//Debug.Log ("usedSpaces: " + usedSpaces);
 	}
 
