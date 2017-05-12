@@ -11,10 +11,9 @@ public class GameLogic : MonoBehaviour {
 	public int gameArrayHeight;
 	private IntVector2 gameArraySize;
 
-	//private bool[,] blockArray;
 	private bool[,] usedArray;
 	private int usedSpaces = 0;
-	private int numBlocks = 0;
+
 	private GameObject[,] blockArrayGO;
 
 	private GameObject blockArrayHolder;
@@ -74,16 +73,7 @@ public class GameLogic : MonoBehaviour {
 		gameCreator = new GameCreator ();
 
 		linesList = gameCreator.createGame (this.transform, gameArraySize, texCircle, texDashed, blockPixelSize, screenSize);
-		/*
-		do {
-			LineClass tempLine = createLine ();
 
-			if (tempLine != null) {
-				linesList.Add (tempLine);
-			}
-		} while (usedSpaces < gameArraySize.x * gameArraySize.y * (1.0f - percentFree));*/
-
-		//fillInBlanks ();
 
 		resetUsedArray ();
 
@@ -94,19 +84,10 @@ public class GameLogic : MonoBehaviour {
 				addSquare (new IntVector2(x, y), gameCreator.blockArray[x, y]);
 			}
 		}
-
-		foreach (LineClass thisLine in linesList) {
-			//thisLine.resetLine ();
-		}
 	}
 
 	private void resetUsedArray() {
-		for (int x = 0; x < gameArraySize.x; ++x) {
-			for (int y = 0; y < gameArraySize.y; ++y) {
-				usedArray [x, y] = false;
-			}
-		}
-
+		
 		usedSpaces = 0;
 
 		foreach (LineClass thisLine in linesList) {
@@ -114,19 +95,6 @@ public class GameLogic : MonoBehaviour {
 			usedSpaces++;
 		}
 	}
-
-	/*private void fillInBlanks() {
-		for (int y = 0; y < gameArraySize.y; ++y) {
-			for (int x = 0; x < gameArraySize.x; ++x) {
-				if (gameCreator.usedArray [x, y]) {
-					blockArray [x, y] = false;
-				} else {
-					blockArray [x, y] = true;
-					numBlocks++;
-				}
-			}
-		}
-	}*/
 
 	private bool isValidMove(IntVector2 _testPoint, LineClass _lineIn, bool checkUsedArray) {
 		IntVector2 testPointReverse = _lineIn.getReverse (_testPoint);
@@ -182,10 +150,6 @@ public class GameLogic : MonoBehaviour {
 	}
 
 	private bool isSquareABlocker(IntVector2 _testPoint) {
-		return gameCreator.blockArray [_testPoint.x, _testPoint.y];
-	}
-
-	private bool isSquare(IntVector2 _testPoint) {
 		return gameCreator.blockArray [_testPoint.x, _testPoint.y];
 	}
 
@@ -268,7 +232,7 @@ public class GameLogic : MonoBehaviour {
 					usedSpaces += goneForward ? 1 : -1;
 
 					Debug.Log ("usedSpaces: " + usedSpaces);
-					Debug.Log ("FreeBlocks: " + (gameArraySize.x * gameArraySize.y - (numBlocks + usedSpaces)));
+					Debug.Log ("FreeBlocks: " + (gameArraySize.x * gameArraySize.y - (gameCreator.numBlocks + usedSpaces)));
 				}
 			}
 		}

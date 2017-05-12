@@ -89,28 +89,14 @@ public class LineClass /*: MonoBehaviour */{
 	public bool isValidMove (IntVector2 _testPoint) {
 		IntVector2 lastPoint = linePathList [linePathList.Count - 1];
 
-		bool isTestPointNextToEnd = false;
-		if (lastPoint.x == _testPoint.x) {
-			if (lastPoint.y == _testPoint.y + 1 ||
-			   lastPoint.y == _testPoint.y - 1) {
-				isTestPointNextToEnd = true;
-			}
-		} else if (lastPoint.y == _testPoint.y) {
-			if (lastPoint.x == _testPoint.x + 1 ||
-				lastPoint.x == _testPoint.x - 1) {
-				isTestPointNextToEnd = true;
-			}
-		}
+		int diffX = Mathf.Abs (lastPoint.x - _testPoint.x);
+		int diffY = Mathf.Abs (lastPoint.y - _testPoint.y);
 
-		//Debug.Log ("ALEC - point A");
+		bool isTestPointNextToEnd = (diffX + diffY == 1);
 
 		if (!isTestPointNextToEnd) {
 			return false;
 		}
-
-		//Debug.Log ("ALEC - point B");
-
-		//bool isTestPointInsideLine = false;
 
 		if (linePathList.Count >= 2) {
 			IntVector2 previousPoint = linePathList [linePathList.Count - 2];
@@ -118,12 +104,9 @@ public class LineClass /*: MonoBehaviour */{
 			if (_testPoint.x == previousPoint.x &&
 				_testPoint.y == previousPoint.y) {
 				// Going back one spot in the forward line is an acceptable move
-				//isTestPointInsideLine = true;
 				return true;
 			}
 		}
-
-		//Debug.Log ("ALEC - point C");
 
 		for (int i = 0; i < linePathList.Count; ++i) {
 			if (i != linePathList.Count - 2) {
@@ -134,21 +117,10 @@ public class LineClass /*: MonoBehaviour */{
 			}
 		}
 
-		//Debug.Log ("ALEC - point D");
-		//if (linePathList.Contains (_testPoint)) {
-		//	return false;
-		//}
-
-		//bool isTestPointInsideReverseLine = false;
-
 		if (linePathListReverse.Contains (_testPoint)) {
 			//isTestPointInsideReverseLine = true;
 			return false;
 		}
-
-		//Debug.Log ("ALEC - point E");
-
-		//ALEC - THIS FUNCTION NEEDS WORK
 
 		return true;
 	}
@@ -172,22 +144,7 @@ public class LineClass /*: MonoBehaviour */{
 		return isTestPointNextToEnd;
 	}
 
-	public bool doMove (IntVector2 _newPoint) {
-		/*IntVector2 lastPoint = linePathList [linePathList.Count - 1];
-
-		bool isTestPointNextToEnd = false;
-		if (lastPoint.x == _newPoint.x) {
-			if (lastPoint.y == _newPoint.y + 1 ||
-				lastPoint.y == _newPoint.y - 1) {
-				isTestPointNextToEnd = true;
-			}
-		} else if (lastPoint.y == _newPoint.y) {
-			if (lastPoint.x == _newPoint.x + 1 ||
-				lastPoint.x == _newPoint.x - 1) {
-				isTestPointNextToEnd = true;
-			}
-		}*/
-
+	public bool doMove (IntVector2 _newPoint, bool _allowUndo = true) {
 		bool isTestPointNextToEnd = isPointNextToLastPoint (_newPoint);
 		if (isTestPointNextToEnd) {
 			bool doneMove = false;
@@ -199,7 +156,9 @@ public class LineClass /*: MonoBehaviour */{
 					_newPoint.y == previousPoint.y) {
 
 					//Debug.Log ("Removing last point");
-					removeLastPoint();
+					if (_allowUndo) {
+						removeLastPoint ();
+					}
 
 					doneMove = true;
 
@@ -253,22 +212,8 @@ public class LineClass /*: MonoBehaviour */{
 		return lineLastPosition;
 	}
 
-	public bool goDirection (int _direction) {
-		switch (_direction) {
-		case 0:
-			return doMove (new IntVector2 (lineLastPosition.x, lineLastPosition.y + 1));
-			//break;
-		case 1:
-			return doMove (new IntVector2 (lineLastPosition.x + 1, lineLastPosition.y));
-			//break;
-		case 2:
-			return doMove (new IntVector2 (lineLastPosition.x, lineLastPosition.y - 1));
-			//break;
-		case 3:
-			return doMove (new IntVector2 (lineLastPosition.x - 1, lineLastPosition.y));
-			//break;
-		}
-		return false;
+	public bool goDirection (int _direction, bool _allowUndo = true) {
+		return doMove (getDirectionPoint (_direction), _allowUndo);
 	}
 
 	public int lineLength() {
@@ -339,22 +284,9 @@ public class LineClass /*: MonoBehaviour */{
 		IntVector2 gameArea = blockPixelSize * gameArraySize;
 		Vector2 position = (screenSize.toFloat() - gameArea.toFloat()) / 2.0f + blockPixelSize.toFloat() * _inPoint;
 		return position;
-
-
-
-		/*
-		float gameAreaWidth = blockPixelSize.x * gameArraySize.x;
-		float gameAreaHeight = blockPixelSize.y * gameArraySize.y;
-		float blockX = (screenSize.x - gameAreaWidth) / 2.0f + blockPixelSize.x * _inPoint.x;
-		float blockY = (screenSize.y - gameAreaHeight) / 2.0f + blockPixelSize.y * _inPoint.y;
-
-		Debug.Log ( "C - " + blockX + ", " + blockY);
-
-		return new Vector2 (blockX, blockY);*/
 	}
 
 	private Vector2 getCenterOfBlockFromWorldSpace (Vector2 _inPoint) {
-		//return new Vector2 (_inPoint.x + blockPixelSize.x / 2, _inPoint.y + blockPixelSize.y / 2);
 		return _inPoint + blockPixelSize.toFloat() / 2;
 	}
 

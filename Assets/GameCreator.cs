@@ -5,7 +5,7 @@ using UnityEngine;
 public class GameCreator {
 
 	private int usedSpaces = 0;
-	private int numBlocks = 0;
+	public int numBlocks = 0;
 
 	private Transform parent;
 	private IntVector2 gameArraySize;
@@ -56,6 +56,10 @@ public class GameCreator {
 
 		fillInBlanks ();
 
+		foreach (LineClass thisLine in linesList) {
+			//thisLine.resetLine ();
+		}
+
 		return linesList;
 	}
 
@@ -87,7 +91,7 @@ public class GameCreator {
 			int directionValue = Random.Range (0, 4);
 			IntVector2 directionPoint = tempLine.getDirectionPoint (directionValue);
 			if (this.isValidMove (directionPoint, tempLine)) {
-				if (tempLine.goDirection (directionValue)) {
+				if (tempLine.goDirection (directionValue, false)) {
 					// fill in array of used spaces with normal and reverse
 					usedArray [directionPoint.x, directionPoint.y] = true;
 					usedSpaces++;
