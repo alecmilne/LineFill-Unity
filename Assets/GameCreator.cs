@@ -5,7 +5,7 @@ using UnityEngine;
 public class GameCreator {
 
 	private int usedSpaces = 0;
-	public int numBlocks = 0;
+	private int numBlocks = 0;
 
 	private Transform parent;
 	private IntVector2 gameArraySize;
@@ -13,32 +13,37 @@ public class GameCreator {
 	private List<LineClass> linesList;
 
 	public bool[,] blockArray;
-	public bool[,] usedArray;
+	private bool[,] usedArray;
 
+	private int activeLine = -1;
 
-
-	float percentFree = 0.1f;
+	private float percentFree = 0.1f;
 
 	private Texture2D texCircle;					// Texture for line origin circle
+	private Texture2D texLine;						// Texture for forward line
 	private Texture2D texDashed;					// Texture for dashes reverse line
 
 	private IntVector2 blockPixelSize;
 
 	private IntVector2 screenSize;
 
-	public List<LineClass> createGame(Transform _parent,
+	public void createGame(Transform _parent,
 		IntVector2 _gameArraySize,
 		Texture2D _texCircle,
+		Texture2D _texLine,
 		Texture2D _texDashed,
 		IntVector2 _blockPixelSize,
-		IntVector2 _screenSize) {
+		IntVector2 _screenSize,
+		float _percentFree) {
 
 		parent = _parent;
 		gameArraySize = _gameArraySize;
 		texCircle = _texCircle;
+		texLine = _texLine;
 		texDashed = _texDashed;
 		blockPixelSize = _blockPixelSize;
 		screenSize = _screenSize;
+		percentFree = _percentFree;
 
 		blockArray = new bool[gameArraySize.x, gameArraySize.y];
 		usedArray = new bool[gameArraySize.x, gameArraySize.y];
@@ -57,10 +62,10 @@ public class GameCreator {
 		fillInBlanks ();
 
 		foreach (LineClass thisLine in linesList) {
-			//thisLine.resetLine ();
+			thisLine.resetLine ();
 		}
 
-		return linesList;
+		resetUsedArray ();
 	}
 
 	private LineClass createLine() {
@@ -81,7 +86,7 @@ public class GameCreator {
 			}
 		} while (!isFreeSpace);
 
-		LineClass tempLine = new LineClass (parent, linePosition, gameArraySize, texCircle,
+		LineClass tempLine = new LineClass (parent, linePosition, gameArraySize, texCircle, texLine,
 			texDashed, blockPixelSize, screenSize);
 
 		usedArray [linePosition.x, linePosition.y] = true;
@@ -90,7 +95,7 @@ public class GameCreator {
 		for (int i = 0; i < 40; ++i) {
 			int directionValue = Random.Range (0, 4);
 			IntVector2 directionPoint = tempLine.getDirectionPoint (directionValue);
-			if (this.isValidMove (directionPoint, tempLine)) {
+			if (this.isValidMove (directionPoint, tempLine, true)) {
 				if (tempLine.goDirection (directionValue, false)) {
 					// fill in array of used spaces with normal and reverse
 					usedArray [directionPoint.x, directionPoint.y] = true;
@@ -114,7 +119,7 @@ public class GameCreator {
 		return tempLine;
 	}
 
-	private bool isValidMove(IntVector2 _testPoint, LineClass _lineIn) {
+	private bool isValidMove(IntVector2 _testPoint, LineClass _lineIn, bool checkUsedArray) {
 		IntVector2 testPointReverse = _lineIn.getReverse (_testPoint);
 
 		if (isOutsideGameGrid (_testPoint)) {
@@ -124,26 +129,43 @@ public class GameCreator {
 			return false;
 		}
 
-		/*if (isSquareABlocker (_testPoint)) {
+		if (isSquareABlocker (_testPoint)) {
 			return false;
 		}
 		if (isSquareABlocker (testPointReverse)) {
 			return false;
-		}*/
+		}
 
 
 		if (!_lineIn.isValidMove (_testPoint)) {
 			return false;
 		}
 
-		if (usedArray [_testPoint.x, _testPoint.y]) {
-			return false;
-		}
-		if (usedArray [testPointReverse.x, testPointReverse.y]) {
-			return false;
-		}
 
+		if (checkUsedArray) {
+			if (usedArray [_testPoint.x, _testPoint.y]) {
+				return false;
+			}
+			if (usedArray [testPointReverse.x, testPointReverse.y]) {
+				return false;
+			}
+		} else {
+			for (int i = 0; i < linesList.Count; ++i) {
+				if (i != activeLine) {
+					if (linesList [i].hitsLine (_testPoint)) {
+						return false;
+					}
+					if (linesList [i].hitsLine (testPointReverse)) {
+						return false;
+					}
+				}
+			}
+		}
 		return true;
+	}
+
+	private bool isSquareABlocker(IntVector2 _testPoint) {
+		return blockArray [_testPoint.x, _testPoint.y];
 	}
 
 	private void fillInBlanks() {
@@ -159,11 +181,61 @@ public class GameCreator {
 		}
 	}
 
+	private void resetUsedArray() {
+		usedSpaces = 0;
+
+		foreach (LineClass thisLine in linesList) {
+			IntVector2 lineOriginBlock = thisLine.getOriginBlock ();
+			usedArray [lineOriginBlock.x, lineOriginBlock.y] = true;
+			usedSpaces++;
+		}
+	}
+
 	private bool isOutsideGameGrid(IntVector2 _testPoint) {
 		if (_testPoint.x < 0 || _testPoint.x >= gameArraySize.x ||
 			_testPoint.y < 0 || _testPoint.y >= gameArraySize.y) {
 			return true;
 		}
 		return false;
+	}
+
+	public void doDown (IntVector2 _clickedBlock) {
+		activeLine = -1;
+		//Debug.Log ("inside game grid: " + linesList.Count);
+
+		for (int i = 0; i < linesList.Count; ++i) {
+			//Debug.Log ("checking line: " + i);
+			if (linesList [i].pointActivatesLine (_clickedBlock)) {
+				//Debug.Log ("activates line: " + i);
+				activeLine = i;
+				break;
+			}
+		}
+	}
+
+	public void doMoved (IntVector2 _clickedBlock) {
+		if (activeLine >= 0) {
+			if (linesList.Count >= activeLine + 1) {
+				bool isBlockAValidMove = isValidMove (_clickedBlock, linesList [activeLine], false);
+				//Debug.Log (isBlockAValidMove);
+				if (isBlockAValidMove) {
+					bool goneForward = linesList [activeLine].doMove (new IntVector2 (_clickedBlock.x, _clickedBlock.y));
+
+					usedArray [_clickedBlock.x, _clickedBlock.y] = goneForward;
+					usedSpaces += goneForward ? 1 : -1;
+
+					IntVector2 clickedBlockReverse = linesList [activeLine].getReverse (_clickedBlock);
+					usedArray [clickedBlockReverse.x, clickedBlockReverse.y] = goneForward;
+					usedSpaces += goneForward ? 1 : -1;
+
+					Debug.Log ("usedSpaces: " + usedSpaces);
+					Debug.Log ("FreeBlocks: " + (gameArraySize.x * gameArraySize.y - (numBlocks + usedSpaces)));
+				}
+			}
+		}
+	}
+
+	public void doUp (IntVector2 _clickedBlock) {
+		activeLine = -1;
 	}
 }

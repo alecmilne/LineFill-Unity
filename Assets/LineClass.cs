@@ -2,9 +2,9 @@
 using System.Collections;
 using System.Collections.Generic;
 
-public class LineClass /*: MonoBehaviour */{
+public class LineClass {
 	
-	public IntVector2 lineArrayPosition;			// Integer value for line origin position within game layout
+	private IntVector2 lineArrayPosition;			// Integer value for line origin position within game layout
 	private Vector2 lineOrigin;						// Pixel value for corner of origin position in gamespace
 	private Vector2 lineCenter;						// Pixel value for center of origin circle in gamespace
 
@@ -16,11 +16,10 @@ public class LineClass /*: MonoBehaviour */{
 	private GameObject circleGO;					// Game Object for holding the circle
 
 	private Texture2D texCircle;					// Texture for line origin circle
+	private Texture2D texLine;						// Texture for forward line
 	private Texture2D texDashed;					// Texture for dashes reverse line
 
-	private IntVector2 blockPixelSize;					// Pixel value for the size of the blocks
-	//private float blockWidth = 60.0f;				// Pixel width of a square
-	//private float blockHeight = 60.0f;				// Pixel height of a square
+	private IntVector2 blockPixelSize;				// Pixel value for the size of the blocks
 
 	private IntVector2 gameArraySize;				// integer size of game grid
 
@@ -33,11 +32,14 @@ public class LineClass /*: MonoBehaviour */{
 	private List<IntVector2> linePathList;			// Holds the list of points the forward line passes through
 	private List<IntVector2> linePathListReverse;	// Holds the list of points the reverse line passes through
 
+	private Color lineColour;						// Colour for the circle and lines
+
 	public LineClass (
 		Transform _parent,
 		IntVector2 _lineArrayPosition,
 		IntVector2 _gameArraySize,
 		Texture2D _texCircle,
+		Texture2D _texLine,
 		Texture2D _texDashed,
 		IntVector2 _blockPixelSize,
 		IntVector2 _screenSize) {
@@ -49,6 +51,7 @@ public class LineClass /*: MonoBehaviour */{
 		lineLastPosition = lineArrayPosition;
 
 		texCircle = _texCircle;
+		texLine = _texLine;
 		texDashed = _texDashed;
 		blockPixelSize = _blockPixelSize;
 		screenSize = _screenSize;
@@ -65,8 +68,16 @@ public class LineClass /*: MonoBehaviour */{
 		lineGO = new GameObject("line_"+lineArrayPosition.x+","+lineArrayPosition.y);
 		lineGO.transform.SetParent (parent);
 
+		lineColour = new Color (Random.Range (0, 256) * 1.0f / 256.0f,
+			Random.Range (0, 256) * 1.0f / 256.0f,
+			Random.Range (0, 256) * 1.0f / 256.0f);
+
 		addCircle ();
 		setupLines ();
+	}
+
+	public IntVector2 getOriginBlock() {
+		return lineArrayPosition;
 	}
 
 	public bool hitsLine (IntVector2 _testPoint) {
@@ -87,16 +98,6 @@ public class LineClass /*: MonoBehaviour */{
 	}
 
 	public bool isValidMove (IntVector2 _testPoint) {
-		/*
-		ALEC
-
-		IntVector2 lastPoint = linePathList [linePathList.Count - 1];
-
-		int diffX = Mathf.Abs (lastPoint.x - _testPoint.x);
-		int diffY = Mathf.Abs (lastPoint.y - _testPoint.y);
-
-		bool isTestPointNextToEnd = (diffX + diffY == 1);
-		*/
 		if (!isPointNextToLastPoint(_testPoint)) {
 			return false;
 		}
@@ -119,7 +120,6 @@ public class LineClass /*: MonoBehaviour */{
 		}
 
 		if (linePathListReverse.Contains (_testPoint)) {
-			//isTestPointInsideReverseLine = true;
 			return false;
 		}
 
@@ -205,12 +205,7 @@ public class LineClass /*: MonoBehaviour */{
 		return doMove (getDirectionPoint (_direction), _allowUndo);
 	}
 
-	public int lineLength() {
-		return linePathList.Count;
-	}
-
 	public void resetLine() {
-
 		linePathList.Clear ();
 		linePathList.Add (lineArrayPosition);
 
@@ -222,9 +217,7 @@ public class LineClass /*: MonoBehaviour */{
 	}
 
 	public void addPoint (IntVector2 _newPoint) {
-
 		if (isValidMove (_newPoint)) {
-
 			linePathList.Add (_newPoint);
 			lineRenderer.positionCount = linePathList.Count;
 
@@ -243,15 +236,10 @@ public class LineClass /*: MonoBehaviour */{
 			Vector2 newPointPixelsReverse = convertPointToWorldSpace (newPointReverse);
 			Vector2 newPointCenterPixelsReverse = getCenterOfBlockFromWorldSpace (newPointPixelsReverse);
 			lineRendererReverse.SetPosition (linePathListReverse.Count - 1, new Vector3 (newPointCenterPixelsReverse.x, newPointCenterPixelsReverse.y, -1.0f));
-
-		//	return true;
-		}// else {
-		//	return false;
-		//}
+		}
 	}
 	
 	public void removeLastPoint () {
-
 		linePathList.RemoveAt (linePathList.Count - 1);
 		lineRenderer.positionCount = linePathList.Count;
 
@@ -259,13 +247,9 @@ public class LineClass /*: MonoBehaviour */{
 
 		linePathListReverse.RemoveAt (linePathListReverse.Count - 1);
 		lineRendererReverse.positionCount = linePathListReverse.Count;
-
 	}
 
 	public IntVector2 getReverse (IntVector2 _inPoint) {
-		//return new IntVector2 (lineArrayPosition.x - (_inPoint.x - lineArrayPosition.x),
-		//						lineArrayPosition.y - (_inPoint.y - lineArrayPosition.y));
-
 		return lineArrayPosition - (_inPoint - lineArrayPosition);
 	}
 
@@ -287,112 +271,58 @@ public class LineClass /*: MonoBehaviour */{
 		lineRenderer.transform.SetParent (lineGO.transform);
 		lineRenderer.startWidth = blockPixelSize.x * 0.3f;
 		lineRenderer.endWidth = blockPixelSize.x * 0.3f;
-		lineRenderer.startColor = Color.red;
-		lineRenderer.endColor = Color.red;
-		lineRenderer.material = new Material (Shader.Find ("Particles/Alpha Blended"));
+		lineRenderer.startColor = lineColour;
+		lineRenderer.endColor = lineColour;
+		lineRenderer.material = new Material (Shader.Find ("Sprites/Default"));
+		//lineRenderer.material = new Material (Shader.Find ("Particles/Alpha Blended"));
 		lineRenderer.useWorldSpace = true;  
-		//lineRenderer.material.mainTexture = texDashed;
-
+		lineRenderer.material.mainTexture = texLine;
 		lineRenderer.positionCount = 1;
 		lineRenderer.SetPosition (0, new Vector3 (lineCenter.x, lineCenter.y, -1.0f));
 
 
-
-
-
-
-		//lineRenderer.enabled = false;
 
 		lineObjectReverse = new GameObject("LineReverse");
 		lineRendererReverse = lineObjectReverse.AddComponent<LineRenderer>();
 		lineRendererReverse.transform.SetParent (lineGO.transform);
 		lineRendererReverse.startWidth = blockPixelSize.x * 0.3f;
 		lineRendererReverse.endWidth = blockPixelSize.x * 0.3f;
-		lineRendererReverse.startColor = Color.blue;
-		lineRendererReverse.endColor = Color.blue;
-		lineRendererReverse.material = new Material (Shader.Find ("Particles/Alpha Blended"));
+		lineRendererReverse.startColor = lineColour;
+		lineRendererReverse.endColor = lineColour;
+		lineRendererReverse.material = new Material (Shader.Find ("Sprites/Default"));
+		//lineRendererReverse.material = new Material (Shader.Find ("Particles/Alpha Blended"));
 		lineRendererReverse.useWorldSpace = true;  
-		//lineRendererReverse.material.mainTexture = texDashed;
+		lineRendererReverse.material.mainTexture = texDashed;
 		//lineRendererReverse.material.mainTextureScale = new Vector2 (0.01f, 0.01f);
 		//lineRendererReverse.textureMode = LineTextureMode.Tile;
 		lineRendererReverse.positionCount = 1;
 		lineRendererReverse.SetPosition (0, new Vector3 (lineCenter.x, lineCenter.y, -1.0f));
-
-		//lineRendererReverse.enabled = false;
 	}
 
-	//public void add
-
-	private void addCircle()
-	{
+	private void addCircle() {
 		circleGO = new GameObject("circle");
 		circleGO.transform.SetParent (lineGO.transform);
 		SpriteRenderer sr = circleGO.AddComponent<SpriteRenderer>() as SpriteRenderer;
-		sr.color = new Color(0.9f, 0.1f, 0.1f, 1.0f);
+		sr.color = lineColour;
+
+		//float gap = texCircle.width * 0.1f;
 
 		Sprite mySprite = Sprite.Create( texCircle, new Rect(0.0f, 0.0f, texCircle.width, texCircle.height), new Vector2(0.0f, 0.0f), 1.0f);
 
 		sr.sprite = mySprite;
 
-		float imageScaleWidth = blockPixelSize.x / sr.sprite.bounds.size.x;
+		float scaleFactor = 0.8f;
+
+		float imageScaleWidth = scaleFactor * blockPixelSize.x / sr.sprite.bounds.size.x;
+
 		circleGO.transform.localScale = new Vector2 (imageScaleWidth, imageScaleWidth);
 
-		circleGO.transform.position = new Vector2 (lineOrigin.x, lineOrigin.y);
+		float gapX = blockPixelSize.x * (1.0f - scaleFactor) / 2;
+		float gapY = blockPixelSize.y * (1.0f - scaleFactor) / 2;
+
+		
+
+		circleGO.transform.position = new Vector2 (gapX + lineOrigin.x, gapY + lineOrigin.y);
 	}
-
-
-
-	/*private void OnDestroy()
-	{
-		//Need to destroy materials
-		//Destroy(this.renderer.material);
-	}*/
-
-
-	/*PolygonCollider2D pc2 ;
-	void Start () {
-		pc2 = gameObject.GetComponent<PolygonCollider2D>();
-		//Render thing
-		int pointCount = 0;
-		pointCount = pc2.GetTotalPointCount();
-		MeshFilter mf = GetComponent<MeshFilter>();
-		Mesh mesh = new Mesh();
-		Vector2[] points = pc2.points;
-		Vector3[] vertices = new Vector3[pointCount];
-		Vector2[] uv = new Vector2[pointCount];
-		for(int j=0; j<pointCount; j++){
-			Vector2 actual = points[j];
-			vertices[j] = new Vector3(actual.x, actual.y, 0);
-			uv[j] = actual;
-		}
-		Triangulator tr = new Triangulator(points);
-		int [] triangles = tr.Triangulate();
-		mesh.vertices = vertices;
-		mesh.triangles = triangles;
-		mesh.uv = uv;
-		mf.mesh = mesh;
-		//Render thing
-	}*/
-
-
-	/*
-
-	void OnPostRender() {
-		//if (!mat) {
-		Debug.LogError("Please Assign a material on the inspector");
-		//	return;
-		//}
-		GL.PushMatrix();
-		mat.SetPass(0);
-		GL.LoadOrtho();
-		GL.Begin(GL.LINES);
-		GL.Color(Color.red);
-		GL.Vertex(startVertex);
-		GL.Vertex(new Vector3(10, 10, -10));
-		GL.End();
-		GL.PopMatrix();
-	}*/
-
-
 }
 
