@@ -11,7 +11,7 @@ public class GameLogic : MonoBehaviour {
 	public int gameArrayHeight;
 	private IntVector2 gameArraySize;
 
-	private GameObject[,] blockArrayGO;
+	//private GameObject[,] blockArrayGO;
 
 	private GameObject blockArrayHolder;
 
@@ -53,20 +53,14 @@ public class GameLogic : MonoBehaviour {
 		blockPixelSize.x = Mathf.RoundToInt (Mathf.Floor (minTemp));
 		blockPixelSize.y = Mathf.RoundToInt (Mathf.Floor (minTemp));
 
-		blockArrayGO = new GameObject[gameArraySize.x, gameArraySize.y];
+
 
 		blockArrayHolder = new GameObject ("blockArrayHolder");
 		blockArrayHolder.transform.SetParent (this.transform);
 
 		gameCreator = new GameCreator ();
 
-		gameCreator.createGame (this.transform, gameArraySize, texCircle, texLine, texDashed, blockPixelSize, screenSize, percentFree);
-
-		for (int y = 0; y < gameArraySize.y; ++y) {
-			for (int x = 0; x < gameArraySize.x; ++x) {
-				addSquare (new IntVector2 (x, y), gameCreator.blockArray [x, y]);
-			}
-		}
+		gameCreator.createGame (this.transform, blockArrayHolder.transform, gameArraySize, texCircle, texLine, texDashed, texBlock, texClear, blockPixelSize, screenSize, percentFree);
 	}
 
 	private bool isOutsideGameGrid(IntVector2 _testPoint) {
@@ -76,44 +70,7 @@ public class GameLogic : MonoBehaviour {
 		}
 		return false;
 	}
-
-	private void addSquare(IntVector2 _testPoint, bool isBlock) {
-		blockArrayGO [_testPoint.x, _testPoint.y] = new GameObject ("block_" + _testPoint.x + "," + _testPoint.y);
-		blockArrayGO [_testPoint.x, _testPoint.y].transform.SetParent (blockArrayHolder.transform);
-		SpriteRenderer sr = blockArrayGO [_testPoint.x, _testPoint.y].AddComponent<SpriteRenderer> () as SpriteRenderer;
-
-		sr.sprite = Sprite.Create ((isBlock ? texBlock : texClear),
-			new Rect (0.0f, 0.0f, texBlock.width, texBlock.height),
-			new Vector2 (0.0f, 0.0f),
-			1.0f);
-
-		float imageScaleWidth = blockPixelSize.x / sr.sprite.bounds.size.x;
-		blockArrayGO [_testPoint.x, _testPoint.y].transform.localScale = new Vector2 (imageScaleWidth, imageScaleWidth);
-		
-		IntVector2 gameArea = blockPixelSize * gameArraySize;
-
-		Vector2 block = (screenSize.toFloat () - gameArea.toFloat ()) / 2 + blockPixelSize.toFloat () * _testPoint;
-
-		blockArrayGO [_testPoint.x, _testPoint.y].transform.position = new Vector3 (block.x, block.y, 1.0f);
-	}
-
-	IntVector2 getBlockFromPoint (Vector2 _testPoint) {
-		for (int x = 0; x < gameArraySize.x; ++x) {
-			for (int y = 0; y < gameArraySize.y; ++y) {
-
-				if (_testPoint.x >= blockArrayGO [x, y].transform.position.x &&
-					_testPoint.x < blockArrayGO [x, y].transform.position.x + blockPixelSize.x &&
-					_testPoint.y >= blockArrayGO [x, y].transform.position.y &&
-					_testPoint.y < blockArrayGO [x, y].transform.position.y + blockPixelSize.y) {
-
-					return new IntVector2 (x, y);
-				}
-			}
-		}
-
-		return new IntVector2 (-1, -1);
-	}
-
+	
 	// Update is called once per frame
 	void Update ()
 	{
@@ -139,31 +96,20 @@ public class GameLogic : MonoBehaviour {
 
 	private void doMoved (Vector3 _movedPos) {
 		if (isMousePressed) {
-			IntVector2 clickedBlock = getBlockFromPoint (new Vector2 (_movedPos.x, _movedPos.y));
-
-			if (!isOutsideGameGrid (clickedBlock)) {
-				gameCreator.doMoved (clickedBlock);
-			}
+			gameCreator.doMoved (_movedPos);
 		}
 	}
 
 	private void doDown (Vector3 _downPos) {
 		isMousePressed = true;
 
-		IntVector2 clickedBlock = getBlockFromPoint (new Vector2 (mousePosition.x, mousePosition.y));
-
-		if (!isOutsideGameGrid (clickedBlock)) {
-
-			gameCreator.doDown (clickedBlock);
-		}
+		gameCreator.doDown (_downPos);
 	}
 
 	private void doUp (Vector3 _upPos) {
 		isMousePressed = false;
 
-		IntVector2 clickedBlock = getBlockFromPoint (new Vector2 (mousePosition.x, mousePosition.y));
-
-		gameCreator.doUp (clickedBlock);
+		gameCreator.doUp (_upPos);
 	}
 
 }

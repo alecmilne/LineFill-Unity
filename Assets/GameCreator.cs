@@ -10,6 +10,8 @@ public class GameCreator {
 	private Transform parent;
 	private IntVector2 gameArraySize;
 
+	private Transform gameHolder;
+
 	private List<LineClass> linesList;
 
 	public bool[,] blockArray;
@@ -23,24 +25,35 @@ public class GameCreator {
 	private Texture2D texLine;						// Texture for forward line
 	private Texture2D texDashed;					// Texture for dashes reverse line
 
+	private Texture2D texBlock;
+	private Texture2D texClear;
+
 	private IntVector2 blockPixelSize;
 
 	private IntVector2 screenSize;
 
+	private GameObject[,] blockArrayGO;
+
 	public void createGame(Transform _parent,
+		Transform _gameHolder,
 		IntVector2 _gameArraySize,
 		Texture2D _texCircle,
 		Texture2D _texLine,
 		Texture2D _texDashed,
+		Texture2D _texBlock,
+		Texture2D _texClear,
 		IntVector2 _blockPixelSize,
 		IntVector2 _screenSize,
 		float _percentFree) {
 
 		parent = _parent;
+		gameHolder = _gameHolder;
 		gameArraySize = _gameArraySize;
 		texCircle = _texCircle;
 		texLine = _texLine;
 		texDashed = _texDashed;
+		texBlock = _texBlock;
+		texClear = _texClear;
 		blockPixelSize = _blockPixelSize;
 		screenSize = _screenSize;
 		percentFree = _percentFree;
@@ -66,6 +79,35 @@ public class GameCreator {
 		}
 
 		resetUsedArray ();
+
+
+		blockArrayGO = new GameObject[gameArraySize.x, gameArraySize.y];
+
+		for (int y = 0; y < gameArraySize.y; ++y) {
+			for (int x = 0; x < gameArraySize.x; ++x) {
+				addSquare (new IntVector2 (x, y), blockArray [x, y]);
+			}
+		}
+	}
+
+	private void addSquare(IntVector2 _testPoint, bool isBlock) {
+		blockArrayGO [_testPoint.x, _testPoint.y] = new GameObject ("block_" + _testPoint.x + "," + _testPoint.y);
+		blockArrayGO [_testPoint.x, _testPoint.y].transform.SetParent (gameHolder);
+		SpriteRenderer sr = blockArrayGO [_testPoint.x, _testPoint.y].AddComponent<SpriteRenderer> () as SpriteRenderer;
+
+		sr.sprite = Sprite.Create ((isBlock ? texBlock : texClear),
+			new Rect (0.0f, 0.0f, texBlock.width, texBlock.height),
+			new Vector2 (0.0f, 0.0f),
+			1.0f);
+
+		float imageScaleWidth = blockPixelSize.x / sr.sprite.bounds.size.x;
+		blockArrayGO [_testPoint.x, _testPoint.y].transform.localScale = new Vector2 (imageScaleWidth, imageScaleWidth);
+
+		IntVector2 gameArea = blockPixelSize * gameArraySize;
+
+		Vector2 block = (screenSize.toFloat () - gameArea.toFloat ()) / 2 + blockPixelSize.toFloat () * _testPoint;
+
+		blockArrayGO [_testPoint.x, _testPoint.y].transform.position = new Vector3 (block.x, block.y, 1.0f);
 	}
 
 	private LineClass createLine() {
@@ -199,43 +241,73 @@ public class GameCreator {
 		return false;
 	}
 
-	public void doDown (IntVector2 _clickedBlock) {
-		activeLine = -1;
-		//Debug.Log ("inside game grid: " + linesList.Count);
+	IntVector2 getBlockFromPoint (Vector2 _testPoint) {
+		for (int x = 0; x < gameArraySize.x; ++x) {
+			for (int y = 0; y < gameArraySize.y; ++y) {
 
-		for (int i = 0; i < linesList.Count; ++i) {
-			//Debug.Log ("checking line: " + i);
-			if (linesList [i].pointActivatesLine (_clickedBlock)) {
-				//Debug.Log ("activates line: " + i);
-				activeLine = i;
-				break;
+				if (_testPoint.x >= blockArrayGO [x, y].transform.position.x &&
+					_testPoint.x < blockArrayGO [x, y].transform.position.x + blockPixelSize.x &&
+					_testPoint.y >= blockArrayGO [x, y].transform.position.y &&
+					_testPoint.y < blockArrayGO [x, y].transform.position.y + blockPixelSize.y) {
+
+					return new IntVector2 (x, y);
+				}
 			}
 		}
+
+		return new IntVector2 (-1, -1);
 	}
 
-	public void doMoved (IntVector2 _clickedBlock) {
-		if (activeLine >= 0) {
-			if (linesList.Count >= activeLine + 1) {
-				bool isBlockAValidMove = isValidMove (_clickedBlock, linesList [activeLine], false);
-				//Debug.Log (isBlockAValidMove);
-				if (isBlockAValidMove) {
-					bool goneForward = linesList [activeLine].doMove (new IntVector2 (_clickedBlock.x, _clickedBlock.y));
+	public void doDown (Vector2 _mousePos) {
 
-					usedArray [_clickedBlock.x, _clickedBlock.y] = goneForward;
-					usedSpaces += goneForward ? 1 : -1;
+		IntVector2 clickedBlock = getBlockFromPoint (new Vector2 (_mousePos.x, _mousePos.y));
 
-					IntVector2 clickedBlockReverse = linesList [activeLine].getReverse (_clickedBlock);
-					usedArray [clickedBlockReverse.x, clickedBlockReverse.y] = goneForward;
-					usedSpaces += goneForward ? 1 : -1;
+		if (!isOutsideGameGrid (clickedBlock)) {
 
-					Debug.Log ("usedSpaces: " + usedSpaces);
-					Debug.Log ("FreeBlocks: " + (gameArraySize.x * gameArraySize.y - (numBlocks + usedSpaces)));
+			activeLine = -1;
+			//Debug.Log ("inside game grid: " + linesList.Count);
+
+			for (int i = 0; i < linesList.Count; ++i) {
+				//Debug.Log ("checking line: " + i);
+				if (linesList [i].pointActivatesLine (clickedBlock)) {
+					//Debug.Log ("activates line: " + i);
+					activeLine = i;
+					break;
 				}
 			}
 		}
 	}
 
-	public void doUp (IntVector2 _clickedBlock) {
+	public void doMoved (Vector2 _mousePos) {
+
+		IntVector2 clickedBlock = getBlockFromPoint (new Vector2 (_mousePos.x, _mousePos.y));
+
+		if (!isOutsideGameGrid (clickedBlock)) {
+			if (activeLine >= 0) {
+				if (linesList.Count >= activeLine + 1) {
+					bool isBlockAValidMove = isValidMove (clickedBlock, linesList [activeLine], false);
+					//Debug.Log (isBlockAValidMove);
+					if (isBlockAValidMove) {
+						bool goneForward = linesList [activeLine].doMove (new IntVector2 (clickedBlock.x, clickedBlock.y));
+
+						usedArray [clickedBlock.x, clickedBlock.y] = goneForward;
+						usedSpaces += goneForward ? 1 : -1;
+
+						IntVector2 clickedBlockReverse = linesList [activeLine].getReverse (clickedBlock);
+						usedArray [clickedBlockReverse.x, clickedBlockReverse.y] = goneForward;
+						usedSpaces += goneForward ? 1 : -1;
+
+						Debug.Log ("usedSpaces: " + usedSpaces);
+						Debug.Log ("FreeBlocks: " + (gameArraySize.x * gameArraySize.y - (numBlocks + usedSpaces)));
+					}
+				}
+			}
+		}
+	}
+
+	public void doUp (Vector2 _mousePos) {
+		IntVector2 clickedBlock = getBlockFromPoint (new Vector2 (_mousePos.x, _mousePos.y));
+
 		activeLine = -1;
 	}
 }
