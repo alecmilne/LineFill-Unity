@@ -72,10 +72,10 @@ public class GameCreator {
 
 			linePosition = new IntVector2 (Random.Range (0, gameArraySize.x), Random.Range (0, gameArraySize.y));
 
-			Debug.Log ("test line position: " + linePosition.x + ", " + linePosition.y);
+			//Debug.Log ("test line position: " + linePosition.x + ", " + linePosition.y);
 			foreach (LineClass thisLine in linesList) {
 				if (thisLine.hitsLine (linePosition)) {
-					Debug.Log ("Point hits another line: " + linePosition.x + ", " + linePosition.y);
+					//Debug.Log ("Point hits another line: " + linePosition.x + ", " + linePosition.y);
 					isFreeSpace = false;
 				}
 			}

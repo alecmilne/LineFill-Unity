@@ -83,26 +83,28 @@ public class LineClass /*: MonoBehaviour */{
 	public bool pointActivatesLine (IntVector2 _testPoint) {
 		IntVector2 lastPoint = linePathList [linePathList.Count - 1];
 
-		return (_testPoint.x == lastPoint.x && _testPoint.y == lastPoint.y);
+		return (_testPoint == lastPoint);
 	}
 
 	public bool isValidMove (IntVector2 _testPoint) {
+		/*
+		ALEC
+
 		IntVector2 lastPoint = linePathList [linePathList.Count - 1];
 
 		int diffX = Mathf.Abs (lastPoint.x - _testPoint.x);
 		int diffY = Mathf.Abs (lastPoint.y - _testPoint.y);
 
 		bool isTestPointNextToEnd = (diffX + diffY == 1);
-
-		if (!isTestPointNextToEnd) {
+		*/
+		if (!isPointNextToLastPoint(_testPoint)) {
 			return false;
 		}
 
 		if (linePathList.Count >= 2) {
 			IntVector2 previousPoint = linePathList [linePathList.Count - 2];
 
-			if (_testPoint.x == previousPoint.x &&
-				_testPoint.y == previousPoint.y) {
+			if (_testPoint == previousPoint) {
 				// Going back one spot in the forward line is an acceptable move
 				return true;
 			}
@@ -110,8 +112,7 @@ public class LineClass /*: MonoBehaviour */{
 
 		for (int i = 0; i < linePathList.Count; ++i) {
 			if (i != linePathList.Count - 2) {
-				if (linePathList [i].x == _testPoint.x &&
-				    linePathList [i].y == _testPoint.y) {
+				if (linePathList [i] == _testPoint) {
 					return false;
 				}
 			}
@@ -125,23 +126,13 @@ public class LineClass /*: MonoBehaviour */{
 		return true;
 	}
 
-	private bool isPointNextToLastPoint (IntVector2 _newPoint) {
+	private bool isPointNextToLastPoint (IntVector2 _testPoint) {
 		IntVector2 lastPoint = linePathList [linePathList.Count - 1];
 
-		bool isTestPointNextToEnd = false;
-		if (lastPoint.x == _newPoint.x) {
-			if (lastPoint.y == _newPoint.y + 1 ||
-				lastPoint.y == _newPoint.y - 1) {
-				isTestPointNextToEnd = true;
-			}
-		} else if (lastPoint.y == _newPoint.y) {
-			if (lastPoint.x == _newPoint.x + 1 ||
-				lastPoint.x == _newPoint.x - 1) {
-				isTestPointNextToEnd = true;
-			}
-		}
+		int diffX = Mathf.Abs (lastPoint.x - _testPoint.x);
+		int diffY = Mathf.Abs (lastPoint.y - _testPoint.y);
 
-		return isTestPointNextToEnd;
+		return (diffX + diffY == 1);
 	}
 
 	public bool doMove (IntVector2 _newPoint, bool _allowUndo = true) {
@@ -152,8 +143,7 @@ public class LineClass /*: MonoBehaviour */{
 			if (linePathList.Count >= 2) {
 				IntVector2 previousPoint = linePathList [linePathList.Count - 2];
 
-				if (_newPoint.x == previousPoint.x &&
-					_newPoint.y == previousPoint.y) {
+				if (_newPoint == previousPoint) {
 
 					//Debug.Log ("Removing last point");
 					if (_allowUndo) {
@@ -174,8 +164,7 @@ public class LineClass /*: MonoBehaviour */{
 
 				for (int i = 0; i < linePathList.Count; ++i) {
 					if (i != linePathList.Count - 2) {
-						if (linePathList [i].x == _newPoint.x &&
-							linePathList [i].y == _newPoint.y) {
+						if (linePathList [i] == _newPoint) {
 							isValidMove = false;
 						}
 					}

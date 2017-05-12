@@ -56,7 +56,7 @@ public class GameLogic : MonoBehaviour {
 
 		float minTemp = Mathf.Min (blockWidthTemp, blockHeightTemp);
 
-		blockPixelSize.x = Mathf.RoundToInt (Mathf.Floor (minTemp));;
+		blockPixelSize.x = Mathf.RoundToInt (Mathf.Floor (minTemp));
 		blockPixelSize.y = Mathf.RoundToInt (Mathf.Floor (minTemp));
 
 		blockArrayGO = new GameObject[gameArraySize.x, gameArraySize.y];
