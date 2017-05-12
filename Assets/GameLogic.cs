@@ -5,60 +5,13 @@ using UnityEngine.UI;
 using UnityEngine.EventSystems;
 //using UnityEditor;
 
-public struct IntVector2
-{
-	public int x;
-	public int y;
-
-	public IntVector2 (int _x, int _y) {
-		x = _x;
-		y = _y;
-	}
-
-	public Vector2 toFloat() {
-		return new Vector2 (x, y);
-	}
-
-	public static bool operator ==(IntVector2 c1, IntVector2 c2) {
-		return (c1.x == c2.x && c1.y == c2.y);
-	}
-
-	public static bool operator !=(IntVector2 c1, IntVector2 c2) {
-		return (c1.x != c2.x || c1.y != c2.y);
-	}
-
-	public static IntVector2 operator *(IntVector2 c1, IntVector2 c2) {
-		return new IntVector2(c1.x * c2.x, c1.x * c2.y);
-	}
-
-	public static Vector2 operator *(Vector2 c1, IntVector2 c2) {
-		return new Vector2(c1.x * c2.x, c1.y * c2.y);
-	}
-
-	public static IntVector2 operator -(IntVector2 c1, IntVector2 c2) {
-		return new IntVector2(c1.x - c2.x, c1.y - c2.y);
-	}
-
-	public static IntVector2 operator +(IntVector2 c1, IntVector2 c2) {
-		return new IntVector2(c1.x + c2.x, c1.x + c2.y);
-	}
-
-	public static Vector2 operator +(Vector2 c1, IntVector2 c2) {
-		return new Vector2(c1.x + c2.x, c1.x + c2.y);
-	}
-
-	public static Vector2 operator /(IntVector2 c1, float c2)  {
-		return new Vector2 (c1.x * 1.0f / c2, c1.x * 1.0f / c2);
-	}
-}
-
 public class GameLogic : MonoBehaviour {
 
 	public int gameArrayWidth;
 	public int gameArrayHeight;
 	private IntVector2 gameArraySize;
 
-	private bool[,] blockArray;
+	//private bool[,] blockArray;
 	private bool[,] usedArray;
 	private int usedSpaces = 0;
 	private int numBlocks = 0;
@@ -90,6 +43,8 @@ public class GameLogic : MonoBehaviour {
 
 	public float percentFree = 0.1f;
 
+	private GameCreator gameCreator;
+
 	void Start () {
 		
 		gameArraySize.x = gameArrayWidth;
@@ -109,23 +64,26 @@ public class GameLogic : MonoBehaviour {
 
 		usedArray = new bool[gameArraySize.x, gameArraySize.y];
 
-		blockArray = new bool[gameArraySize.x, gameArraySize.y];
+		//blockArray = new bool[gameArraySize.x, gameArraySize.y];
 			
 		blockArrayHolder = new GameObject("blockArrayHolder");
 		blockArrayHolder.transform.SetParent (this.transform);
 
 		linesList = new List<LineClass> ();
 
+		gameCreator = new GameCreator ();
 
+		linesList = gameCreator.createGame (this.transform, gameArraySize, texCircle, texDashed, blockPixelSize, screenSize);
+		/*
 		do {
 			LineClass tempLine = createLine ();
 
 			if (tempLine != null) {
 				linesList.Add (tempLine);
 			}
-		} while (usedSpaces < gameArraySize.x * gameArraySize.y * (1.0f - percentFree));
+		} while (usedSpaces < gameArraySize.x * gameArraySize.y * (1.0f - percentFree));*/
 
-		fillInBlanks ();
+		//fillInBlanks ();
 
 		resetUsedArray ();
 
@@ -133,7 +91,7 @@ public class GameLogic : MonoBehaviour {
 		{
 			for (int x = 0; x < gameArraySize.x; ++x)
 			{
-				addSquare (new IntVector2(x, y), blockArray[x, y]);
+				addSquare (new IntVector2(x, y), gameCreator.blockArray[x, y]);
 			}
 		}
 
@@ -157,69 +115,10 @@ public class GameLogic : MonoBehaviour {
 		}
 	}
 
-	private LineClass createLine() {
-		bool isFreeSpace = false;
-
-		IntVector2 linePosition = new IntVector2 (0, 0);
-
-		do {
-			//for (int i = 0; !isFreeSpace; ++i) {
-			//for (int i = 0; i < 100 && !isFreeSpace; ++i) {
-			isFreeSpace = true;
-
-			linePosition = new IntVector2 (Random.Range (0, gameArraySize.x), Random.Range (0, gameArraySize.y));
-
-			if (isOutsideGameGrid (linePosition)) {
-				//Debug.Log ("Point is outside of game grid");
-				isFreeSpace = false;
-			} else {
-				Debug.Log ("test line position: " + linePosition.x + ", " + linePosition.y);
-				foreach (LineClass thisLine in linesList) {
-					if (thisLine.hitsLine (linePosition)) {
-						Debug.Log ("Point hits another line: " + linePosition.x + ", " + linePosition.y);
-						isFreeSpace = false;
-					}
-				}
-			}
-		} while (!isFreeSpace);
-
-		LineClass tempLine = new LineClass (this.transform, linePosition, gameArraySize, texCircle,
-			texDashed, blockPixelSize, screenSize);
-
-		usedArray [linePosition.x, linePosition.y] = true;
-		usedSpaces++;
-
-		for (int i = 0; i < 40; ++i) {
-			int directionValue = Random.Range (0, 4);
-			IntVector2 directionPoint = tempLine.getDirectionPoint (directionValue);
-			if (isValidMove (directionPoint, tempLine, true)) {
-				if (tempLine.goDirection (directionValue)) {
-					// fill in array of used spaces with normal and reverse
-					usedArray [directionPoint.x, directionPoint.y] = true;
-					usedSpaces++;
-
-					IntVector2 directionPointReverse = tempLine.getReverse (directionPoint);
-					usedArray [directionPointReverse.x, directionPointReverse.y] = true;
-					usedSpaces++;
-				} else {
-					//Debug.Log ("Unable to do direction move here - " + i);
-					//i--;
-					i++;
-				}
-			} else {
-				//Debug.Log ("Unable to move here - " + i);
-				//i--;
-				i++;
-			}
-		}
-
-		return tempLine;
-	}
-
-	private void fillInBlanks() {
+	/*private void fillInBlanks() {
 		for (int y = 0; y < gameArraySize.y; ++y) {
 			for (int x = 0; x < gameArraySize.x; ++x) {
-				if (usedArray [x, y]) {
+				if (gameCreator.usedArray [x, y]) {
 					blockArray [x, y] = false;
 				} else {
 					blockArray [x, y] = true;
@@ -227,7 +126,7 @@ public class GameLogic : MonoBehaviour {
 				}
 			}
 		}
-	}
+	}*/
 
 	private bool isValidMove(IntVector2 _testPoint, LineClass _lineIn, bool checkUsedArray) {
 		IntVector2 testPointReverse = _lineIn.getReverse (_testPoint);
@@ -283,11 +182,11 @@ public class GameLogic : MonoBehaviour {
 	}
 
 	private bool isSquareABlocker(IntVector2 _testPoint) {
-		return blockArray [_testPoint.x, _testPoint.y];
+		return gameCreator.blockArray [_testPoint.x, _testPoint.y];
 	}
 
 	private bool isSquare(IntVector2 _testPoint) {
-		return blockArray [_testPoint.x, _testPoint.y];
+		return gameCreator.blockArray [_testPoint.x, _testPoint.y];
 	}
 
 	private void addSquare(IntVector2 _testPoint, bool isBlock)
@@ -350,7 +249,7 @@ public class GameLogic : MonoBehaviour {
 				IntVector2 clickedBlock = getBlockFromPoint (new Vector2 (mousePosition.x, mousePosition.y));
 
 				bool isBlockAValidMove = isValidMove (clickedBlock, linesList [activeLine], false);
-				Debug.Log (isBlockAValidMove);
+				//Debug.Log (isBlockAValidMove);
 				if (isBlockAValidMove) {
 
 					//SpriteRenderer sr = blockArrayGO [clickedBlock.x, clickedBlock.y].GetComponent<SpriteRenderer> ();
@@ -382,12 +281,12 @@ public class GameLogic : MonoBehaviour {
 
 		if (!isOutsideGameGrid (clickedBlock)) {
 			activeLine = -1;
-			Debug.Log ("inside game grid: " + linesList.Count);
+			//Debug.Log ("inside game grid: " + linesList.Count);
 
 			for (int i = 0; i < linesList.Count; ++i) {
-				Debug.Log ("checking line: " + i);
+				//Debug.Log ("checking line: " + i);
 				if (linesList [i].pointActivatesLine (clickedBlock)) {
-					Debug.Log ("activates line: " + i);
+					//Debug.Log ("activates line: " + i);
 					activeLine = i;
 					break;
 				}

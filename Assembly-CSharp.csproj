@@ -46,7 +46,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+     <Compile Include="Assets\GameCreator.cs" />
      <Compile Include="Assets\GameLogic.cs" />
+     <Compile Include="Assets\IntVector2.cs" />
      <Compile Include="Assets\LineClass.cs" />
      <Compile Include="Assets\MainMenu.cs" />
      <None Include="Assets\NewSurfaceShader.shader" />

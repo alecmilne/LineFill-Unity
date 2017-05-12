@@ -67,14 +67,6 @@ public class LineClass /*: MonoBehaviour */{
 
 		addCircle ();
 		setupLines ();
-
-
-		/*for (int i = 0; i < 100; ++i) {
-			if (goDirection (Random.Range (0, 4)) == false) {
-				i--;
-			}
-		}*/
-
 	}
 
 	public bool hitsLine (IntVector2 _testPoint) {
@@ -347,7 +339,6 @@ public class LineClass /*: MonoBehaviour */{
 		IntVector2 gameArea = blockPixelSize * gameArraySize;
 		Vector2 position = (screenSize.toFloat() - gameArea.toFloat()) / 2.0f + blockPixelSize.toFloat() * _inPoint;
 		return position;
-
 
 
 
