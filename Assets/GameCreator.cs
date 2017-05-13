@@ -74,13 +74,6 @@ public class GameCreator {
 
 		fillInBlanks ();
 
-		foreach (LineClass thisLine in linesList) {
-			thisLine.resetLine ();
-		}
-
-		resetUsedArray ();
-
-
 		blockArrayGO = new GameObject[gameArraySize.x, gameArraySize.y];
 
 		for (int y = 0; y < gameArraySize.y; ++y) {
@@ -88,6 +81,17 @@ public class GameCreator {
 				addSquare (new IntVector2 (x, y), blockArray [x, y]);
 			}
 		}
+
+		foreach (LineClass thisLine in linesList) {
+			thisLine.resetLine ();
+
+			colourSquare (thisLine.getOriginBlock(), thisLine.getHighlightColour(), true);
+		}
+
+		resetUsedArray ();
+
+
+
 	}
 
 	private void addSquare(IntVector2 _testPoint, bool isBlock) {
@@ -288,16 +292,36 @@ public class GameCreator {
 					bool isBlockAValidMove = isValidMove (clickedBlock, linesList [activeLine], false);
 					//Debug.Log (isBlockAValidMove);
 					if (isBlockAValidMove) {
+
+						IntVector2 lastEndOfLine = linesList [activeLine].getLastPoint ();
+
 						bool goneForward = linesList [activeLine].doMove (new IntVector2 (clickedBlock.x, clickedBlock.y));
 
-						usedArray [clickedBlock.x, clickedBlock.y] = goneForward;
-						usedSpaces += goneForward ? 1 : -1;
+						if (goneForward) {
+							usedArray [clickedBlock.x, clickedBlock.y] = true;
+							usedSpaces++;
 
-						IntVector2 clickedBlockReverse = linesList [activeLine].getReverse (clickedBlock);
-						usedArray [clickedBlockReverse.x, clickedBlockReverse.y] = goneForward;
-						usedSpaces += goneForward ? 1 : -1;
+							colourSquare (clickedBlock, linesList[activeLine].getHighlightColour(), true);
 
-						Debug.Log ("usedSpaces: " + usedSpaces);
+							IntVector2 clickedBlockReverse = linesList [activeLine].getReverse (clickedBlock);
+							usedArray [clickedBlockReverse.x, clickedBlockReverse.y] = true;
+							usedSpaces++;
+
+							colourSquare (clickedBlockReverse, linesList[activeLine].getHighlightColour(), true);
+						} else {
+							usedArray [lastEndOfLine.x, lastEndOfLine.y] = false;
+							usedSpaces--;
+
+							colourSquare (lastEndOfLine, Color.white, false);
+
+							IntVector2 lastEndOfLineReverse = linesList [activeLine].getReverse (lastEndOfLine);
+							usedArray [lastEndOfLineReverse.x, lastEndOfLineReverse.y] = goneForward;
+							usedSpaces--;
+
+							colourSquare (lastEndOfLineReverse, Color.white, false);
+						}
+
+						//Debug.Log ("usedSpaces: " + usedSpaces);
 						Debug.Log ("FreeBlocks: " + (gameArraySize.x * gameArraySize.y - (numBlocks + usedSpaces)));
 					}
 				}
@@ -305,8 +329,22 @@ public class GameCreator {
 		}
 	}
 
+	private void colourSquare (IntVector2 _square, Color _colour, bool _active) {
+		SpriteRenderer sr = blockArrayGO [_square.x, _square.y].GetComponent<SpriteRenderer> ();
+
+		//if (_active) {
+			sr.color = _colour;
+		/*} else {
+			sr.color = new Color (1.0f,
+				1.0f,
+				1.0f,
+				1.0f);
+		}*/
+
+	}
+
 	public void doUp (Vector2 _mousePos) {
-		IntVector2 clickedBlock = getBlockFromPoint (new Vector2 (_mousePos.x, _mousePos.y));
+		//IntVector2 clickedBlock = getBlockFromPoint (new Vector2 (_mousePos.x, _mousePos.y));
 
 		activeLine = -1;
 	}

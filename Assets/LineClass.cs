@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -33,6 +34,7 @@ public class LineClass {
 	private List<IntVector2> linePathListReverse;	// Holds the list of points the reverse line passes through
 
 	private Color lineColour;						// Colour for the circle and lines
+	private Color highlightedColour;				// Faded out version of the colour for background
 
 	public LineClass (
 		Transform _parent,
@@ -68,16 +70,51 @@ public class LineClass {
 		lineGO = new GameObject("line_"+lineArrayPosition.x+","+lineArrayPosition.y);
 		lineGO.transform.SetParent (parent);
 
-		lineColour = new Color (Random.Range (0, 256) * 1.0f / 256.0f,
-			Random.Range (0, 256) * 1.0f / 256.0f,
-			Random.Range (0, 256) * 1.0f / 256.0f);
+		float randColour = UnityEngine.Random.Range (0, 360);
+
+		lineColour = ColorFromHSV (randColour, 1.0d, 1.0d);
+		highlightedColour = ColorFromHSV (randColour, 0.5d, 1.0d);
 
 		addCircle ();
 		setupLines ();
 	}
 
+	public static Color ColorFromHSV(double hue, double saturation, double value)
+	{
+		int hi = Convert.ToInt32(Math.Floor(hue / 60)) % 6;
+		double f = hue / 60 - Math.Floor(hue / 60);
+
+		value = value * 255;
+		int v = Convert.ToInt32(value);
+		int p = Convert.ToInt32(value * (1 - saturation));
+		int q = Convert.ToInt32(value * (1 - f * saturation));
+		int t = Convert.ToInt32(value * (1 - (1 - f) * saturation));
+
+		float vf = v * 1.0f / 255.0f;
+		float pf = p * 1.0f / 255.0f;
+		float qf = q * 1.0f / 255.0f;
+		float tf = t * 1.0f / 255.0f;
+
+		if (hi == 0)
+			return new Color(vf, tf, pf);
+		else if (hi == 1)
+			return new Color(qf, vf, pf);
+		else if (hi == 2)
+			return new Color(pf, vf, tf);
+		else if (hi == 3)
+			return new Color(pf, qf, vf);
+		else if (hi == 4)
+			return new Color(tf, pf, vf);
+		else
+			return new Color(vf, pf, qf);
+	}
+
 	public IntVector2 getOriginBlock() {
 		return lineArrayPosition;
+	}
+
+	public Color getHighlightColour() {
+		return highlightedColour;
 	}
 
 	public bool hitsLine (IntVector2 _testPoint) {
@@ -237,6 +274,10 @@ public class LineClass {
 			Vector2 newPointCenterPixelsReverse = getCenterOfBlockFromWorldSpace (newPointPixelsReverse);
 			lineRendererReverse.SetPosition (linePathListReverse.Count - 1, new Vector3 (newPointCenterPixelsReverse.x, newPointCenterPixelsReverse.y, -1.0f));
 		}
+	}
+
+	public IntVector2 getLastPoint() {
+		return lineLastPosition;
 	}
 	
 	public void removeLastPoint () {
