@@ -70,10 +70,32 @@ public class LineClass {
 		lineGO = new GameObject("line_"+lineArrayPosition.x+","+lineArrayPosition.y);
 		lineGO.transform.SetParent (parent);
 
-		float randColour = UnityEngine.Random.Range (0, 360);
+		//float randColour = UnityEngine.Random.Range (0, 360);
 
-		lineColour = ColorFromHSV (randColour, 1.0d, 1.0d);
-		highlightedColour = ColorFromHSV (randColour, 0.5d, 1.0d);
+		//lineColour = ColorFromHSV (randColour, 1.0d, 1.0d);
+
+
+
+		double perceivedBrightness = 0d;
+
+		do {
+			float randColour = UnityEngine.Random.Range (0, 360);
+
+			lineColour = ColorFromHSV (UnityEngine.Random.Range (0, 360),
+				UnityEngine.Random.Range (140, 230) * 1.0f / 255.0f,
+				UnityEngine.Random.Range (140, 230) * 1.0f / 255.0f);
+
+			perceivedBrightness = Math.Sqrt (0.299 * lineColour.r * lineColour.r +
+			0.587 * lineColour.g * lineColour.g +
+			0.114 * lineColour.b * lineColour.b);
+		} while (perceivedBrightness < 0.3d || perceivedBrightness > 0.8d);
+
+		Debug.Log ("brightness: " + perceivedBrightness);
+
+		//highlightedColour = ColorFromHSV (randColour, 0.5d, 1.0d);
+
+		highlightedColour = lineColour;
+		highlightedColour.a = 0.7f;
 
 		addCircle ();
 		setupLines ();
